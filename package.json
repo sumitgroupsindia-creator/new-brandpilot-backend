@@ -1,0 +1,37 @@
+{
+  "name": "brandpilot-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BrandPilot \u2014 Backend API (NestJS + Prisma)",
+  "license": "UNLICENSED",
+  "author": "BrandPilot Engineering",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "db:migrate:dev": "pnpm --filter @brandpilot/api db:migrate:dev && pnpm --filter @brandpilot/api db:seed",
+    "db:migrate:deploy": "pnpm --filter @brandpilot/api db:migrate:deploy",
+    "db:generate": "pnpm --filter @brandpilot/api db:generate",
+    "db:push": "pnpm --filter @brandpilot/api exec prisma db push",
+    "db:seed": "pnpm --filter @brandpilot/api db:seed",
+    "db:studio": "pnpm --filter @brandpilot/api db:studio",
+    "api:start": "pnpm --filter @brandpilot/api start:prod",
+    "api:dev": "pnpm --filter @brandpilot/api dev"
+  },
+  "devDependencies": {
+    "@turbo/gen": "^2.3.3",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
+  }
+}

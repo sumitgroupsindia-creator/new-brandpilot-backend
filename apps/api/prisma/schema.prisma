@@ -1,0 +1,623 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Tenancy & Identity ----------
+
+model Tenant {
+  id           String       @id @default(cuid()) @db.Char(26)
+  name         String       @db.VarChar(255)
+  slug         String       @unique @db.VarChar(255)
+  status       TenantStatus @default(ACTIVE)
+  displayName  String?      @db.VarChar(255)
+  logoUrl      String?      @db.VarChar(2048)
+  primaryColor String?      @db.VarChar(9)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  users        User[]
+  config       ConfigEntry[]
+  auditLogs    AuditLog[]
+  categories   Category[]
+  frames       Frame[]
+  projects     Project[]
+  assets       Asset[]
+  walletTxns   WalletTransaction[]
+  billingPlans BillingPlan[]
+  rechargeOrders RechargeOrder[]
+  notifications NotificationEvent[]
+  outboxMessages OutboxMessage[]
+  subscriptionPlans SubscriptionPlan[]
+  subscriptions Subscription[]
+
+  @@index([status])
+  @@index([slug])
+  @@map("tenants")
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum ThemeMode {
+  LIGHT
+  DARK
+  SYSTEM
+
+  @@map("theme_mode")
+}
+
+model User {
+  id                String     @id @default(cuid()) @db.Char(26)
+  tenantId          String     @db.Char(26)
+  email             String     @db.VarChar(255)
+  passwordHash      String?    @db.VarChar(255)
+  name              String?    @db.VarChar(255)
+  themeMode         ThemeMode  @default(SYSTEM)
+  status            UserStatus @default(PENDING_VERIFICATION)
+  emailVerifiedAt   DateTime?
+  emailVerifyToken  String?    @db.VarChar(255)
+  passwordResetToken String?   @db.VarChar(255)
+  passwordResetExpiresAt DateTime?
+  mfaSecret         String?    @db.VarChar(255)
+  mfaEnabled        Boolean    @default(false)
+  deletedAt         DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  tenant   Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions Session[]
+  roles    UserRole[]
+  auditLogs AuditLog[]
+  idempotencyKeys IdempotencyKey[]
+  projects Project[]
+  assets Asset[]
+  walletTxns WalletTransaction[]
+  rechargeOrders RechargeOrder[]
+  notificationPreferences UserNotificationPreference[]
+  notifications NotificationEvent[]
+  outboxMessages OutboxMessage[]
+  subscriptions Subscription[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+  @@map("users")
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  DELETED
+
+  @@map("user_status")
+}
+
+model Session {
+  id            String    @id @default(cuid()) @db.Char(26)
+  userId        String    @db.Char(26)
+  tenantId      String    @db.Char(26)
+  refreshHash   String    @unique @db.VarChar(255)
+  familyId      String    @db.Char(26)
+  replacedById  String?   @db.Char(26)
+  deviceName    String?   @db.VarChar(255)
+  deviceInfo    Json?
+  ipAddress     String?   @db.VarChar(45)
+  revokedAt     DateTime?
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshHash])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Role {
+  id          String @id @default(cuid()) @db.Char(26)
+  tenantId    String @db.Char(26)
+  key         String @db.VarChar(100)
+  name        String @db.VarChar(255)
+  description String? @db.Text
+  isSystem    Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  permissions RolePermission[]
+  userRoles   UserRole[]
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+  @@map("roles")
+}
+
+model Permission {
+  id    String @id @default(cuid()) @db.Char(26)
+  key   String @unique @db.VarChar(100)
+  name  String @db.VarChar(255)
+  description String? @db.Text
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @db.Char(26)
+  permissionId String @db.Char(26)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId String @db.Char(26)
+  roleId String @db.Char(26)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// ---------- Configuration ----------
+
+model ConfigEntry {
+  id          String    @id @default(cuid()) @db.Char(26)
+  tenantId    String?   @db.Char(26)
+  namespace   String    @db.VarChar(100)
+  key         String    @db.VarChar(255)
+  value       Json
+  isSecret    Boolean   @default(false)
+  updatedBy   String?   @db.Char(26)
+  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+
+  tenant   Tenant?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  versions ConfigVersion[]
+
+  @@unique([tenantId, namespace, key])
+  @@index([namespace])
+  @@index([tenantId, namespace])
+  @@map("config_entries")
+}
+
+model ConfigVersion {
+  id          String   @id @default(cuid()) @db.Char(26)
+  configId    String   @db.Char(26)
+  value       Json
+  reason      String?  @db.Text
+  createdBy   String?  @db.Char(26)
+  createdAt   DateTime @default(now())
+
+  config ConfigEntry @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@index([configId, createdAt])
+  @@map("config_versions")
+}
+
+// ---------- Domain Models ----------
+
+enum FrameTier {
+  FREE
+  PREMIUM
+
+  @@map("frame_tier")
+}
+
+enum FrameStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+
+  @@map("frame_status")
+}
+
+enum AssetKind {
+  IMAGE
+  VIDEO
+
+  @@map("asset_kind")
+}
+
+enum AssetStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELED
+
+  @@map("asset_status")
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+  BONUS
+  EXPIRY
+
+  @@map("wallet_transaction_type")
+}
+
+enum RechargeOrderStatus {
+  CREATED
+  PAID
+  FAILED
+  EXPIRED
+
+  @@map("recharge_order_status")
+}
+
+enum NotificationChannel {
+  EMAIL
+  PUSH
+  IN_APP
+
+  @@map("notification_channel")
+}
+
+enum NotificationEventKey {
+  RECHARGE_SUCCESS
+  RECHARGE_FAILED
+  GENERATION_COMPLETED
+  GENERATION_FAILED
+  WALLET_LOW_BALANCE
+
+  @@map("notification_event_key")
+}
+
+enum SubPeriod {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+
+  @@map("sub_period")
+}
+
+enum SubStatus {
+  PENDING
+  ACTIVE
+  IN_GRACE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+
+  @@map("sub_status")
+}
+
+model Category {
+  id        String   @id @default(cuid()) @db.Char(26)
+  tenantId  String   @db.Char(26)
+  parentId  String?  @db.Char(26)
+  name      String   @db.VarChar(255)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parent   Category? @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryTree")
+  frames   Frame[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, sortOrder])
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Frame {
+  id               String      @id @default(cuid()) @db.Char(26)
+  tenantId         String      @db.Char(26)
+  categoryId       String?     @db.Char(26)
+  title            String      @db.VarChar(255)
+  description      String?     @db.Text
+  tier             FrameTier   @default(FREE)
+  status           FrameStatus @default(DRAFT)
+  template         Json?
+  estimatedCredits Int         @default(0)
+  isTrending       Boolean     @default(false)
+  isFeatured       Boolean     @default(false)
+  version          Int         @default(1)
+  publishedAt      DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  projects Project[]
+  assets   Asset[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, isFeatured, isTrending])
+  @@index([categoryId])
+  @@map("frames")
+}
+
+model Project {
+  id        String   @id @default(cuid()) @db.Char(26)
+  tenantId  String   @db.Char(26)
+  userId    String   @db.Char(26)
+  frameId   String?  @db.Char(26)
+  name      String   @db.VarChar(255)
+  payload   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  frame  Frame? @relation(fields: [frameId], references: [id], onDelete: SetNull)
+  assets Asset[]
+
+  @@index([tenantId, userId, updatedAt])
+  @@index([frameId])
+  @@map("projects")
+}
+
+model Asset {
+  id          String      @id @default(cuid()) @db.Char(26)
+  tenantId    String      @db.Char(26)
+  userId      String      @db.Char(26)
+  projectId   String?     @db.Char(26)
+  frameId     String?     @db.Char(26)
+  title       String      @db.VarChar(255)
+  kind        AssetKind
+  status      AssetStatus @default(QUEUED)
+  creditsUsed Int         @default(0)
+  outputUrl   String?     @db.LongText
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  frame   Frame?   @relation(fields: [frameId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, userId, createdAt])
+  @@index([projectId])
+  @@index([frameId])
+  @@map("assets")
+}
+
+model WalletTransaction {
+  id        String                @id @default(cuid()) @db.Char(26)
+  tenantId  String                @db.Char(26)
+  userId    String?               @db.Char(26)
+  type      WalletTransactionType
+  amount    Int
+  summary   String                @db.VarChar(500)
+  createdAt DateTime              @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, userId, createdAt])
+  @@index([type])
+  @@map("wallet_transactions")
+}
+
+model BillingPlan {
+  id        String   @id @default(cuid()) @db.Char(26)
+  tenantId  String?  @db.Char(26)
+  amountInr Int
+  credits   Int
+  bonus     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, active])
+  @@map("billing_plans")
+}
+
+model RechargeOrder {
+  id              String              @id @default(cuid()) @db.Char(26)
+  tenantId        String              @db.Char(26)
+  userId          String              @db.Char(26)
+  providerOrderId String              @unique @db.VarChar(100)
+  providerPaymentId String?           @db.VarChar(100)
+  status          RechargeOrderStatus @default(CREATED)
+  amountInr       Int
+  amountPaise     Int
+  credits         Int
+  bonusCredits    Int                 @default(0)
+  currency        String              @db.VarChar(10) @default("INR")
+  rawPayload      Json?
+  paidAt          DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId, createdAt])
+  @@index([status])
+  @@map("recharge_orders")
+}
+
+model SubscriptionPlan {
+  id             String    @id @default(cuid()) @db.Char(26)
+  tenantId       String?   @db.Char(26)
+  name           String    @db.VarChar(255)
+  amountInr      Int
+  currency       String    @db.VarChar(10) @default("INR")
+  period         SubPeriod @default(MONTHLY)
+  premiumFrames  Boolean   @default(true)
+  monthlyCredits Int       @default(0)
+  graceDays      Int       @default(3)
+  active         Boolean   @default(true)
+  displayOrder   Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subscriptions Subscription[]
+
+  @@index([tenantId, active, displayOrder])
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                String    @id @default(cuid()) @db.Char(26)
+  tenantId          String    @db.Char(26)
+  userId            String    @db.Char(26)
+  planId            String    @db.Char(26)
+  provider          String    @db.VarChar(50) @default("razorpay")
+  providerSubId     String    @unique @db.VarChar(100)
+  status            SubStatus @default(PENDING)
+  currentPeriodStart DateTime?
+  currentPeriodEnd  DateTime?
+  cancelAtPeriodEnd Boolean   @default(false)
+  canceledAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan   SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  events SubscriptionEvent[]
+
+  @@index([tenantId, userId, status])
+  @@index([status, currentPeriodEnd])
+  @@map("subscriptions")
+}
+
+model SubscriptionEvent {
+  id             String   @id @default(cuid()) @db.Char(26)
+  subscriptionId String   @db.Char(26)
+  eventType      String   @db.VarChar(100)
+  payload        Json?
+  createdAt      DateTime @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId, createdAt])
+  @@map("subscription_events")
+}
+
+model UserNotificationPreference {
+  id        String               @id @default(cuid()) @db.Char(26)
+  userId    String               @db.Char(26)
+  eventKey  NotificationEventKey
+  email     Boolean              @default(true)
+  push      Boolean              @default(true)
+  inApp     Boolean              @default(true)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventKey])
+  @@index([eventKey])
+  @@map("user_notification_preferences")
+}
+
+model NotificationEvent {
+  id         String               @id @default(cuid()) @db.Char(26)
+  tenantId   String               @db.Char(26)
+  userId     String               @db.Char(26)
+  eventKey   NotificationEventKey
+  channel    NotificationChannel
+  title      String               @db.VarChar(255)
+  body       String               @db.Text
+  status     String               @db.VarChar(30) @default("PENDING")
+  metadata   Json?
+  deliveredAt DateTime?
+  createdAt  DateTime             @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId, createdAt])
+  @@index([eventKey, channel])
+  @@map("notification_events")
+}
+
+model OutboxMessage {
+  id            String   @id @default(cuid()) @db.Char(26)
+  tenantId      String?  @db.Char(26)
+  userId        String?  @db.Char(26)
+  topic         String   @db.VarChar(100)
+  dedupeKey     String?  @db.VarChar(255)
+  payload       Json
+  status        String   @db.VarChar(20) @default("PENDING")
+  attempts      Int      @default(0)
+  maxAttempts   Int      @default(5)
+  nextAttemptAt DateTime @default(now())
+  processedAt   DateTime?
+  lastError     String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([topic, dedupeKey])
+  @@index([status, nextAttemptAt])
+  @@index([tenantId, createdAt])
+  @@map("outbox_messages")
+}
+
+// ---------- Audit & Idempotency ----------
+
+model AuditLog {
+  id          String   @id @default(cuid()) @db.Char(26)
+  tenantId    String?  @db.Char(26)
+  actorId     String?  @db.Char(26)
+  actorEmail  String?  @db.VarChar(255)
+  action      String   @db.VarChar(100)
+  entityType  String   @db.VarChar(100)
+  entityId    String?  @db.Char(26)
+  before      Json?
+  after       Json?
+  reason      String?  @db.Text
+  ipAddress   String?  @db.VarChar(45)
+  correlationId String? @db.VarChar(255)
+  createdAt   DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  actor  User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@map("audit_logs")
+}
+
+model IdempotencyKey {
+  id          String    @id @default(cuid()) @db.Char(26)
+  key         String    @db.VarChar(255)
+  tenantId    String    @db.Char(26)
+  userId      String    @db.Char(26)
+  requestMethod String  @db.VarChar(10)
+  requestPath String    @db.VarChar(2048)
+  requestBody Json?
+  responseStatus Int
+  responseBody Json?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId, key])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
