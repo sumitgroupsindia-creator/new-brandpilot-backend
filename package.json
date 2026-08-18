@@ -10,7 +10,8 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "build": "turbo run build",
+    "fix:bins": "node scripts/fix-native-bins.mjs",
+    "build": "pnpm run fix:bins && turbo run build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
