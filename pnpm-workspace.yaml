@@ -2,6 +2,10 @@ packages:
   - 'apps/*'
   - 'packages/*'
 
+overrides:
+  baseline-browser-mapping: 2.11.14
+  electron-to-chromium: 1.5.408
+
 # pnpm requires an explicit decision for every dependency with a build
 # script, otherwise install fails with ERR_PNPM_IGNORED_BUILDS.
 #
@@ -11,6 +15,8 @@ packages:
 # this changes nothing at build time.
 allowBuilds:
   'esbuild': false
+  '@scarf/scarf': false
+  'msgpackr-extract': false
   'prisma': true
   '@prisma/client': true
   '@prisma/engines': true
@@ -26,3 +32,5 @@ onlyBuiltDependencies:
   - '@nestjs/core'
 ignoredBuiltDependencies:
   - 'esbuild'
+  - '@scarf/scarf'
+  - 'msgpackr-extract'

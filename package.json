@@ -9,9 +9,10 @@
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
     "fix:bins": "node scripts/fix-native-bins.mjs",
-    "build": "pnpm run fix:bins && turbo run build",
+    "build": "node scripts/fix-native-bins.mjs && ./node_modules/.bin/tsc -p packages/shared/tsconfig.json && cd apps/api && ./node_modules/.bin/prisma generate && ./node_modules/.bin/nest build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
@@ -37,6 +38,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
+      "version": "11.22.0",
       "onFail": "warn"
     }
   }
