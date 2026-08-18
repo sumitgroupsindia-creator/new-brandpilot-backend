@@ -38,15 +38,5 @@
       "name": "pnpm",
       "onFail": "warn"
     }
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "@prisma/client",
-      "@prisma/engines",
-      "prisma",
-      "argon2",
-      "@nestjs/core"
-    ]
   }
 }
