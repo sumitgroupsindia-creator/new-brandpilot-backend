@@ -25,8 +25,16 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
   app.use(cookieParser(configService.get('COOKIE_SECRET') ?? 'dev-secret'));
+  // WEB_APP_URL accepts one origin or a comma-separated list, so the web app
+  // and the admin panel can live on different domains. Unset = allow any
+  // origin (development only).
+  const allowedOrigins = (configService.get<string>('WEB_APP_URL') ?? '')
+    .split(',')
+    .map(origin => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+
   app.enableCors({
-    origin: configService.get('WEB_APP_URL') ?? true,
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,
     exposedHeaders: ['X-Correlation-Id', 'X-Request-Id'],
   });
