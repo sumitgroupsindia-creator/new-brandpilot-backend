@@ -41,3 +41,11 @@ still declares `web` and `admin` services that build from `apps/web` /
 `apps/admin` — those apps now live in the frontend and admin repos. Either
 comment those services out, or point them at prebuilt images, before running
 `docker compose up` from this repo.
+
+## CORS
+
+`WEB_APP_URL` in `.env` is the CORS allowlist origin (`apps/api/src/main.ts`).
+When the web app and admin panel are hosted on domains other than the API's,
+set it to the app's origin — requests are sent with credentials, so it cannot
+be a wildcard. If the frontends are proxied onto the API's own origin
+(the nginx config in `packages/infra`), this does not apply.
