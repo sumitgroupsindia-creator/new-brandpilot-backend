@@ -259,7 +259,7 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(claims, {
-      privateKey: this.configService.get<string>('JWT_PRIVATE_KEY'),
+      privateKey: this.configService.get<string>('JWT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
       algorithm: 'RS256',
     });
 

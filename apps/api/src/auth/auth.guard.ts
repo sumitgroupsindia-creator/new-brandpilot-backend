@@ -41,7 +41,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = authHeader.slice(7);
     try {
       const payload = this.jwtService.verify<JwtClaims>(token, {
-        publicKey: this.configService.get<string>('JWT_PUBLIC_KEY'),
+        publicKey: this.configService.get<string>('JWT_PUBLIC_KEY')?.replace(/\\n/g, '\n'),
         algorithms: ['RS256'],
         clockTolerance: 30,
       });
