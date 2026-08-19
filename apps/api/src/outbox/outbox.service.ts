@@ -15,7 +15,8 @@ export class OutboxService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly prisma: PrismaService) {}
 
   onModuleInit() {
-    const enabled = (process.env.OUTBOX_WORKER_ENABLED ?? 'true').toLowerCase() !== 'false';
+    const defaultEnabled = process.env.NODE_ENV === 'production' ? 'false' : 'true';
+    const enabled = (process.env.OUTBOX_WORKER_ENABLED ?? defaultEnabled).toLowerCase() === 'true';
     if (!enabled) {
       return;
     }
@@ -149,7 +150,9 @@ export class OutboxService implements OnModuleInit, OnModuleDestroy {
       pending,
       retry,
       dead,
-      workerEnabled: (process.env.OUTBOX_WORKER_ENABLED ?? 'true').toLowerCase() !== 'false',
+      workerEnabled:
+        (process.env.OUTBOX_WORKER_ENABLED ?? (process.env.NODE_ENV === 'production' ? 'false' : 'true')).toLowerCase() ===
+        'true',
       pollIntervalMs: Math.max(1000, this.pollIntervalMs),
     };
   }
