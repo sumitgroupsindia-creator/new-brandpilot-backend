@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtClaims, RoleKey } from '@brandpilot/shared';
 import { TenantContextService } from './tenant-context.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { normalizeJwtKey } from '../common/jwt-key';
 
 export const ACT_AS_TENANT_HEADER = 'x-act-as-tenant';
 export const TENANT_SLUG_HEADER = 'x-tenant-slug';
@@ -32,7 +33,7 @@ export class TenantContextMiddleware implements NestMiddleware {
       const token = authHeader.slice(7);
       try {
         const payload = this.jwtService.verify<JwtClaims>(token, {
-          publicKey: this.configService.get<string>('JWT_PUBLIC_KEY')?.replace(/\\n/g, '\n'),
+          publicKey: normalizeJwtKey(this.configService.get<string>('JWT_PUBLIC_KEY')),
           algorithms: ['RS256'],
           clockTolerance: 30,
         });

@@ -12,6 +12,7 @@ import { Request } from 'express';
 import { JwtClaims, Permission } from '@brandpilot/shared';
 import { IS_PUBLIC_KEY } from '../common/decorators/public.decorator';
 import { PERMISSIONS_KEY } from './permissions.decorator';
+import { normalizeJwtKey } from '../common/jwt-key';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -41,7 +42,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = authHeader.slice(7);
     try {
       const payload = this.jwtService.verify<JwtClaims>(token, {
-        publicKey: this.configService.get<string>('JWT_PUBLIC_KEY')?.replace(/\\n/g, '\n'),
+        publicKey: normalizeJwtKey(this.configService.get<string>('JWT_PUBLIC_KEY')),
         algorithms: ['RS256'],
         clockTolerance: 30,
       });

@@ -16,6 +16,7 @@ import { LoginDto, RegisterDto } from '@brandpilot/shared';
 import * as crypto from 'crypto';
 import { ulid } from 'ulid';
 import { OutboxService } from '../outbox/outbox.service';
+import { normalizeJwtKey } from '../common/jwt-key';
 
 @Injectable()
 export class AuthService {
@@ -259,7 +260,7 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(claims, {
-      privateKey: this.configService.get<string>('JWT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+      privateKey: normalizeJwtKey(this.configService.get<string>('JWT_PRIVATE_KEY')),
       algorithm: 'RS256',
     });
 
