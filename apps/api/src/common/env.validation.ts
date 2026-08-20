@@ -33,6 +33,10 @@ class EnvVariables {
 
   @IsString()
   @IsOptional()
+  PUBLIC_APP_URL?: string;
+
+  @IsString()
+  @IsOptional()
   RAZORPAY_KEY_ID?: string;
 
   @IsString()

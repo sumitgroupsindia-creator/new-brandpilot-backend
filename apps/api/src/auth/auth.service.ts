@@ -272,10 +272,22 @@ export class AuthService {
   }
 
   private getPublicAppBaseUrl() {
-    return (
-      this.configService.get<string>('WEB_APP_URL') ||
-      this.configService.get<string>('APP_BASE_URL') ||
-      'http://localhost:5173'
-    );
+    // WEB_APP_URL is a comma-separated CORS allowlist, so it can't be used as a
+    // URL directly — doing that produced verify/reset links with every allowed
+    // origin concatenated into the host. PUBLIC_APP_URL names the canonical
+    // user-facing app; otherwise fall back to the first allowlisted origin.
+    // APP_BASE_URL is deliberately not used here: it points at the API itself,
+    // not at the web app these links must open.
+    const explicit = this.configService.get<string>('PUBLIC_APP_URL')?.trim();
+    if (explicit) {
+      return explicit.replace(/\/+$/, '');
+    }
+
+    const firstAllowedOrigin = (this.configService.get<string>('WEB_APP_URL') ?? '')
+      .split(',')[0]
+      ?.trim()
+      .replace(/\/+$/, '');
+
+    return firstAllowedOrigin || 'http://localhost:5173';
   }
 }
