@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { AssetStatus } from '@prisma/client';
+import { AssetStatus } from '../generated/prisma/client';
 import { GenerationService } from './generation.service';
 
 describe('GenerationService.handleRunwayWebhook', () => {

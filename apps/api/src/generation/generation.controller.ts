@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AssetKind } from '@prisma/client';
+import { AssetKind } from '../generated/prisma/client';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { IsIn, IsObject, IsOptional, IsString } from 'class-validator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';

@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
-import { FrameStatus, FrameTier, Prisma, UserStatus } from '@prisma/client';
+import { FrameStatus, FrameTier, Prisma, UserStatus } from '../generated/prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { EncryptionService } from './encryption.service';

@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { NotificationEventKey } from '@prisma/client';
+import { NotificationEventKey } from '../generated/prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { NotificationsService } from './notifications.service';
 

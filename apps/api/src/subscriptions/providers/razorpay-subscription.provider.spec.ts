@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { SubPeriod, SubStatus } from '@prisma/client';
+import { SubPeriod, SubStatus } from '../../generated/prisma/client';
 import { createHmac } from 'crypto';
 import { RazorpaySubscriptionProvider } from './razorpay-subscription.provider';
 

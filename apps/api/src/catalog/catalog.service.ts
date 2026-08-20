@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigKeys } from '@brandpilot/shared';
-import { FrameStatus, FrameTier } from '@prisma/client';
+import { FrameStatus, FrameTier } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { TenantContextService } from '../tenancy/tenant-context.service';

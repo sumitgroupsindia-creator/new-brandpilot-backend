@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AssetKind } from '@prisma/client';
+import { AssetKind } from '../generated/prisma/client';
 import { OpenAiImageProvider } from './providers/openai-image.provider';
 import { RunwayVideoProvider } from './providers/runway-video.provider';
 import { BackgroundRemovalService } from './background-removal.service';

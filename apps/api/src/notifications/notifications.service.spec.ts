@@ -1,4 +1,4 @@
-import { NotificationChannel, NotificationEventKey } from '@prisma/client';
+import { NotificationChannel, NotificationEventKey } from '../generated/prisma/client';
 import { NotificationsService } from './notifications.service';
 
 describe('NotificationsService templates', () => {

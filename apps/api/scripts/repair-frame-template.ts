@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../src/generated/prisma/client';
+import { createPrismaAdapter } from '../src/prisma/prisma-pool';
 
 function usageAndExit() {
   console.error('Usage: ts-node scripts/repair-frame-template.ts <jsonPath> [frameTitle] [tenantSlug]');
@@ -196,7 +197,7 @@ async function main() {
     nextTemplate.thumbnailUrl = thumbnailUrl;
   }
 
-  const prisma = new PrismaClient();
+  const prisma = new PrismaClient({ adapter: createPrismaAdapter() });
   try {
     const tenant = await prisma.tenant.findUnique({ where: { slug: tenantSlug }, select: { id: true } });
     if (!tenant) {

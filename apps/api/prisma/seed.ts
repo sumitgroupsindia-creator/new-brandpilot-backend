@@ -7,7 +7,8 @@ import {
   AssetKind,
   AssetStatus,
   WalletTransactionType,
-} from '@prisma/client';
+} from '../src/generated/prisma/client';
+import { createPrismaAdapter } from '../src/prisma/prisma-pool';
 import * as argon2 from 'argon2';
 import { config as loadEnv } from 'dotenv';
 import { resolve } from 'path';
@@ -17,7 +18,7 @@ import { Permission, RoleKey } from '@brandpilot/shared';
 loadEnv({ path: resolve(__dirname, '../../.env') });
 loadEnv({ path: resolve(__dirname, '../.env') });
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter: createPrismaAdapter() });
 
 const ALL_PERMISSIONS = Object.values(Permission);
 

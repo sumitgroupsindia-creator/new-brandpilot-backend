@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { AssetKind, AssetStatus, FrameTier, NotificationEventKey, Prisma } from '@prisma/client';
+import { AssetKind, AssetStatus, FrameTier, NotificationEventKey, Prisma } from '../generated/prisma/client';
 import { ConfigKeys } from '@brandpilot/shared';
 import { ConfigService as AppConfigService } from '../config/config.service';
 import { IdempotencyService } from '../idempotency/idempotency.service';
