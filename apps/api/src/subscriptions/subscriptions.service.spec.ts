@@ -14,9 +14,13 @@ describe('SubscriptionsService', () => {
       },
       subscriptionEvent: { create: jest.fn() },
       auditLog: { create: jest.fn() },
+      // isSuperAdmin() falls through to a userRole lookup when hasRole is false.
+      userRole: { findFirst: jest.fn().mockResolvedValue(null) },
     } as any;
 
-    const tenantContext = { getTenantId: jest.fn() } as any;
+    // hasRole is used by isSuperAdmin(); without it the fake throws before
+    // the premium-access logic under test is ever reached.
+    const tenantContext = { getTenantId: jest.fn(), hasRole: jest.fn().mockReturnValue(false) } as any;
     const idempotency = {
       findExisting: jest.fn(),
       save: jest.fn(),
