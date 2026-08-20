@@ -43,6 +43,7 @@ function chmodFilesIn(dir, filter) {
   } catch {
     return;
   }
+  
   for (const entry of entries) {
     if (entry.isDirectory()) continue;
     if (filter && !filter(entry.name)) continue;
