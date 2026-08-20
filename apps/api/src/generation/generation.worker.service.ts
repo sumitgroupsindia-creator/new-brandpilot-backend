@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { AssetStatus, NotificationEventKey, Prisma } from '@prisma/client';
+import { AssetStatus, NotificationEventKey, Prisma } from '../generated/prisma/client';
 import { Job, Worker } from 'bullmq';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';

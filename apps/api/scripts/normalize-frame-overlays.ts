@@ -1,6 +1,7 @@
 import path from 'path';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../src/generated/prisma/client';
+import { createPrismaAdapter } from '../src/prisma/prisma-pool';
 import { PNG } from 'pngjs';
 
 type Layer = {
@@ -141,7 +142,7 @@ async function main() {
   dotenv.config({ path: path.resolve(cwd, '../../.env'), override: false });
 
   const { tenantSlug, frameTitle } = parseArgs();
-  const prisma = new PrismaClient();
+  const prisma = new PrismaClient({ adapter: createPrismaAdapter() });
 
   try {
     const tenant = await prisma.tenant.findUnique({ where: { slug: tenantSlug }, select: { id: true } });

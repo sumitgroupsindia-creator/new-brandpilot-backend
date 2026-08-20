@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { NotificationEventKey, Prisma, RechargeOrderStatus } from '@prisma/client';
+import { NotificationEventKey, Prisma, RechargeOrderStatus } from '../generated/prisma/client';
 import { createHmac, randomUUID } from 'crypto';
 import { IdempotencyService } from '../idempotency/idempotency.service';
 import { PrismaService } from '../prisma/prisma.service';

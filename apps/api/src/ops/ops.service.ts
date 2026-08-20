@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigKeys } from '@brandpilot/shared';
-import { FrameStatus, FrameTier, Prisma, SubPeriod } from '@prisma/client';
+import { FrameStatus, FrameTier, Prisma, SubPeriod } from '../generated/prisma/client';
 import AdmZip, { IZipEntry } from 'adm-zip';
 import { randomUUID } from 'crypto';
 import path from 'path';

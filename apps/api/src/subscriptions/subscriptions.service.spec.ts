@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { SubPeriod, SubStatus } from '@prisma/client';
+import { SubPeriod, SubStatus } from '../generated/prisma/client';
 import { SubscriptionsService } from './subscriptions.service';
 
 describe('SubscriptionsService', () => {

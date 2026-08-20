@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigKeys } from '@brandpilot/shared';
-import { Prisma, SubStatus } from '@prisma/client';
+import { Prisma, SubStatus } from '../generated/prisma/client';
 import { ConfigService } from '../config/config.service';
 import { IdempotencyService } from '../idempotency/idempotency.service';
 import { PrismaService } from '../prisma/prisma.service';

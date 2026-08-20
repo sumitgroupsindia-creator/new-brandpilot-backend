@@ -1,10 +1,17 @@
 generator client {
-  provider = "prisma-client-js"
+  // Prisma 7 drops the Rust query engine entirely. The old engine spawned a
+  // tokio worker pool, which blew past the process/thread cap on Hostinger's
+  // shared hosting and surfaced as a stream of "PANIC: timer has gone away".
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  // The API is a CommonJS NestJS build, so the client must be emitted as CJS
+  // rather than the ESM default.
+  moduleFormat = "cjs"
+  runtime      = "nodejs"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // ---------- Tenancy & Identity ----------

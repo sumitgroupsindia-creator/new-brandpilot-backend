@@ -3,7 +3,7 @@ import {
   NotificationChannel,
   NotificationEventKey,
   Prisma,
-} from '@prisma/client';
+} from '../generated/prisma/client';
 import { ConfigKeys } from '@brandpilot/shared';
 import { ConfigService } from '../config/config.service';
 import { OutboxService } from '../outbox/outbox.service';
