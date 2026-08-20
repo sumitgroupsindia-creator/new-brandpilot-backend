@@ -41,5 +41,10 @@
       "version": "11.22.0",
       "onFail": "warn"
     }
+  },
+  "pnpm": {
+    "overrides": {
+      "baseline-browser-mapping": "2.11.14"
+    }
   }
 }
