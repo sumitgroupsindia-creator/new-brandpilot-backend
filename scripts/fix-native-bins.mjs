@@ -8,6 +8,14 @@
  *
  *   Error: spawn .../@turbo/linux-64/bin/turbo EACCES
  *
+ * Two kinds of files need fixing, in two different places:
+ *   1. CLI shims, which live in bin/ and .bin/ directories.
+ *   2. Prisma's engines, which do NOT live in a bin/ directory — they sit
+ *      beside the package source (e.g. .prisma/client/libquery_engine-*.node
+ *      and @prisma/engines/schema-engine-*). Walking only bin/ misses these
+ *      entirely, which left the query engine unexecutable on hosts that drop
+ *      modes.
+ *
  * Node scripts are unaffected because `node file.js` needs no execute bit, so
  * this runs fine even when the binaries it is fixing do not.
  *
@@ -18,10 +26,17 @@ import { chmodSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = 'node_modules';
-const MAX_DEPTH = 6;
+const MAX_DEPTH = 8;
 let fixed = 0;
 
-function chmodFilesIn(dir) {
+// Prisma ships its engines outside any bin/ directory.
+const NATIVE_FILE = /^(libquery_engine|query-engine-|schema-engine-|libquery_engine-)/;
+
+function isNativeBinary(name) {
+  return NATIVE_FILE.test(name);
+}
+
+function chmodFilesIn(dir, filter) {
   let entries;
   try {
     entries = readdirSync(dir, { withFileTypes: true });
@@ -30,6 +45,7 @@ function chmodFilesIn(dir) {
   }
   for (const entry of entries) {
     if (entry.isDirectory()) continue;
+    if (filter && !filter(entry.name)) continue;
     const file = join(dir, entry.name);
     try {
       const mode = statSync(file).mode & 0o777;
@@ -57,6 +73,7 @@ function walk(dir, depth) {
       chmodFilesIn(child);
       continue;
     }
+    chmodFilesIn(child, isNativeBinary);
     walk(child, depth + 1);
   }
 }
